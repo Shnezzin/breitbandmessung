@@ -10,27 +10,31 @@ import time
 import psutil
 
 config = configparser.ConfigParser(allow_no_value=True)
-config.read('config/config.cfg')
+try:
+    with config.read('config/config.cfg'):
 
-if config.has_section('Measurement'):
-        MIN_UPLOAD = config.get('Measurement', 'min-upload')
-        MIN_DOWNLOAD = config.get('Measurement', 'min-download')
+        if config.has_section('Measurement'):
+                MIN_UPLOAD = config.get('Measurement', 'min-upload')
+                MIN_DOWNLOAD = config.get('Measurement', 'min-download')
 
-if config.has_section('Telegram'):
-        TELEGRAM_TOKEN = config.get('Telegram', 'token')
-        TELEGRAM_ID = config.get('Telegram', 'ID')
+        if config.has_section('Telegram'):
+                TELEGRAM_TOKEN = config.get('Telegram', 'token')
+                TELEGRAM_ID = config.get('Telegram', 'ID')
 
-if config.has_section('MAIL'):
-        MAILUSER = config.get('MAIL', 'username')
-        MAILDOMAIN = config.get('MAIL', 'maildomain')
-        MAILPASSWORD = config.get('MAIL', 'password')
-        MAILTO = config.get('MAIL', 'mailto')
+        if config.has_section('MAIL'):
+                MAILUSER = config.get('MAIL', 'username')
+                MAILDOMAIN = config.get('MAIL', 'maildomain')
+                MAILPASSWORD = config.get('MAIL', 'password')
+                MAILTO = config.get('MAIL', 'mailto')
 
-if config.has_section('Twitter'):
-        TWITTERCKey = config.get('Twitter', 'consumerkey')
-        TWITTERCSecret = config.get('Twitter', 'consumersecret')
-        TWITTERAKey = config.get('Twitter', 'accesstoken')
-        TWITTERASecret = config.get('Twitter', 'accesssecret')
+        if config.has_section('Twitter'):
+                TWITTERCKey = config.get('Twitter', 'consumerkey')
+                TWITTERCSecret = config.get('Twitter', 'consumersecret')
+                TWITTERAKey = config.get('Twitter', 'accesstoken')
+                TWITTERASecret = config.get('Twitter', 'accesssecret')
+
+except IOError:
+    print('No configuration available')
 
 TEST_URL = "https://breitbandmessung.de/test"
 FIREFOX_PATH = "firefox-esr"
