@@ -14,12 +14,14 @@ WORKDIR /usr/src/app
 
 COPY speedtest.py config.shlib geckodriver.sh ./
 
+COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
 RUN chmod +x ./geckodriver.sh && ./geckodriver.sh
 
 RUN chmod +x speedtest.py
 
 RUN mkdir /export
 
-COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["tini", "--", "docker-entrypoint.sh"]
