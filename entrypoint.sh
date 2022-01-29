@@ -16,8 +16,9 @@ ln -s /usr/share/zoneinfo/$TZ /etc/localtime
 
 echo "Run on startup: ${RUN_ON_STARTUP}"
 if [ "$RUN_ON_STARTUP" = "true" ]; then
-    /usr/src/app/speedtest.py
+    /usr/src/app/speedtest.py  > /proc/1/fd/1 2>/proc/1/fd/2
     if [ "$RUN_ONCE" = "true" ]; then
+    cho "Run once: ${RUN_ONCE}"
     echo "Exiting..."
     exit 0
     fi
@@ -30,7 +31,7 @@ echo "Setting cron schedule: ${CRON_SCHEDULE}"
 echo "${CRON_SCHEDULE} '/usr/src/app/speedtest.py' > /proc/1/fd/1 2>/proc/1/fd/2" | crontab -
 cron -f
 else
-/usr/src/app/speedtest.py
+/usr/src/app/speedtest.py  > /proc/1/fd/1 2>/proc/1/fd/2
 echo "Exiting..."
 exit 0
 fi
