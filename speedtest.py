@@ -11,7 +11,7 @@ import psutil
 
 config = configparser.ConfigParser(allow_no_value=True)
 try:
-    with config.read('config/config.cfg'):
+        config.read('config/config.cfg')
 
         if config.has_section('Measurement'):
                 MIN_UPLOAD = config.get('Measurement', 'min-upload')
