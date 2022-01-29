@@ -18,7 +18,7 @@ echo "Run on startup: ${RUN_ON_STARTUP}"
 if [ "$RUN_ON_STARTUP" = "true" ]; then
     /usr/src/app/speedtest.py  > /proc/1/fd/1 2>/proc/1/fd/2
     if [ "$RUN_ONCE" = "true" ]; then
-    cho "Run once: ${RUN_ONCE}"
+    echo "Run once: ${RUN_ONCE}"
     echo "Exiting..."
     exit 0
     fi
