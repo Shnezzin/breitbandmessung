@@ -12,7 +12,7 @@ RUN pip3 install --no-cache-dir \
 # Create app directory
 WORKDIR /usr/src/app
 
-COPY speedtest.py config.shlib geckodriver.sh ./
+COPY speedtest.py config.shlib geckodriver.sh config.cfg.defaults ./
 
 COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
