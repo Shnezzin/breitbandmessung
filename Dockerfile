@@ -8,8 +8,7 @@ RUN pip3 install --no-cache-dir \
      selenium \
      apprise \
      psutil
-
-# Create app directory
+     
 WORKDIR /usr/src/app
 
 COPY speedtest.py config.shlib geckodriver.sh config.cfg.defaults ./
