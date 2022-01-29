@@ -61,6 +61,7 @@ for proc in psutil.process_iter():
         proc.kill()
 
 #Open browser and testpage breitbandmessung.de/test
+print()
 print("Open Browser")
 fireFoxOptions = webdriver.FirefoxOptions()
 fireFoxOptions.headless = True
@@ -101,7 +102,7 @@ data_guidlines.click()
 print("Start measurement")
 while True:
     try:
-        header = browser.find_element_by_css_selector(website_header)
+        header = browser.find_element(By.CSS_SELECTOR, website_header)
         if header.text == "Die Browsermessung ist abgeschlossen.":
             save_result = browser.find_element(By.CSS_SELECTOR, download_result)
             save_result.click()
@@ -124,11 +125,15 @@ while True:
     finally:
         time.sleep(SLEEPTIME)
 
-if result_up.text >= MIN_UPLOAD and result_down.text >= MIN_DOWNLOAD:
-    internet_to_slow = False
-    print('Internet ok')
+try: MIN_UPLOAD and MIN_DOWNLOAD
+except NameError:
+    exit()
 else:
-    internet_to_slow = True
+    if result_up.text >= MIN_UPLOAD or result_down.text >= MIN_DOWNLOAD:
+        internet_to_slow = False
+        print('Internet ok')
+    else:
+        internet_to_slow = True
 
 if internet_to_slow:
     print("Internet to slow")
