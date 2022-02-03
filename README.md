@@ -58,7 +58,7 @@ sudo ./create.sh
 or 
 
 ```
-docker run -d -v $PWD/config/:/usr/src/app/config:rw -v $PWD/messprotokolle:/export/ --name "breitbandmessung" shneezin/breitbandmessung
+docker run -d -p 5800:5800 --name "breitbandmessung" shneezin/breitbandmessung
 ```
 
 To merge the csv files into one, run merge.sh or:

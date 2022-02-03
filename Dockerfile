@@ -1,27 +1,48 @@
-FROM python:slim-bullseye
+FROM jlesage/baseimage-gui:ubuntu-18.04
 
-RUN  apt-get update \
-     && apt-get install --no-install-recommends -y firefox-esr tini cron curl build-essential libssl-dev libffi-dev python3-dev cargo \
-     && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=de_DE.UTF-8
 
-RUN pip3 install --no-cache-dir \
-     selenium \
-     apprise \
-     psutil
+#Install xterm 
+RUN apt-get update && \
+    apt-get install -y \
+            libasound2 \                        
+            libatk-bridge2.0 \
+            libatk1.0 \
+            libgbm-dev \
+            libgtk-3-0 \
+            libjpeg-dev \
+            libnss3 \
+            libxss1 \
+            locales \
+            python3 \
+            python3-dev \
+            python3-pip \
+            python3-tk \
+            wget \
+            xterm \
+            zlib1g-dev
 
-# Create app directory
-WORKDIR /usr/src/app
+#Install pyautogui and xlib
+RUN pip3 install pyautogui python-xlib
 
-COPY speedtest.py config.shlib geckodriver.sh ./
+#Install latest Version of Breitbandmessung deb
+RUN wget https://download.breitbandmessung.de/bbm/Breitbandmessung-linux.deb && dpkg -i Breitbandmessung-linux.deb
 
-COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+#Generate the DE Locales
+RUN locale-gen de_DE.UTF-8
 
-RUN chmod +x ./geckodriver.sh && ./geckodriver.sh
+# Create Favicon
+RUN \
+    APP_ICON_URL=https://breitbandmessung.de/images/breitbandmessung-logo.png && \
+    APP_ICON_DESC='{"masterPicture":"/opt/novnc/images/icons/master_icon.png","iconsPath":"/images/icons/","design":{"ios":{"pictureAspect":"backgroundAndMargin","backgroundColor":"#ffffff","margin":"14%","assets":{"ios6AndPriorIcons":false,"ios7AndLaterIcons":false,"precomposedIcons":false,"declareOnlyDefaultIcon":true}},"desktopBrowser":{},"windows":{"pictureAspect":"noChange","backgroundColor":"#2d89ef","onConflict":"override","assets":{"windows80Ie10Tile":false,"windows10Ie11EdgeTiles":{"small":false,"medium":true,"big":false,"rectangle":false}}},"androidChrome":{"pictureAspect":"noChange","themeColor":"#ffffff","manifest":{"display":"standalone","orientation":"notSet","onConflict":"override","declared":true},"assets":{"legacyIcon":false,"lowResolutionIcons":false}},"safariPinnedTab":{"pictureAspect":"silhouette","themeColor":"#5bbad5"}},"settings":{"scalingAlgorithm":"Mitchell","errorOnImageTooSmall":false},"versioning":{"paramName":"v","paramValue":"ICON_VERSION"}}' && \
+    install_app_icon.sh "$APP_ICON_URL" "$APP_ICON_DESC"
 
-RUN chmod +x speedtest.py
+# Copy the start script
+COPY startapp.sh /startapp.sh
 
-RUN mkdir /export
+#Copy the python script
+COPY click.py /opt/
 
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["tini", "--", "docker-entrypoint.sh"]
+# Set Application name
+ENV APP_NAME="Breitbandmessung"
