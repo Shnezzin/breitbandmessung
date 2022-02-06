@@ -21,10 +21,24 @@ RUN apt-get update && \
             python3-tk \
             wget \
             xterm \
-            zlib1g-dev
+            zlib1g-dev \
+            curl jq \
+            libcurl4 \
+            libjq1 \
+            libnghttp2-14 \
+            libonig4 \
+            libpython2.7-minimal \
+            librtmp1 \
+            nodejs \
+            python-minimal \
+            python2.7-minimal
 
-#Install pyautogui and xlib
-RUN pip3 install pyautogui python-xlib
+#Install pyautogui, xlib and apprise
+RUN pip3 install \
+            pyautogui \
+            python-xlib \ 
+            apprise \
+            croniter
 
 #Install latest Version of Breitbandmessung deb
 RUN wget https://download.breitbandmessung.de/bbm/Breitbandmessung-linux.deb && dpkg -i Breitbandmessung-linux.deb
@@ -42,7 +56,8 @@ RUN \
 COPY startapp.sh /startapp.sh
 
 #Copy the python script
-COPY click.py /opt/
+COPY speedtest.py /opt/
+COPY entrypoint.py /opt/
 
 # Set Application name
 ENV APP_NAME="Breitbandmessung"
