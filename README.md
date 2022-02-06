@@ -11,12 +11,14 @@ Example config.cfg:
 [Docker Config]
 timezone=Europe/Berlin
 crontab=* */2 * * *
-run_once=true
-run_on_startup=true
+run_once=false
+run_on_startup=false
 
 [Measurement]
 min-upload=600
 min-download=30
+modus=setup
+happy=2
 
 [Telegram]
 token=4927531485:lchtmxgr6sm7ia4g0fvbtoslruvgtway6uf
