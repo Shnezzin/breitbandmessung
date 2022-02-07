@@ -12,6 +12,8 @@ import apprise
 #modus = 'einzelmessung'
 #modus = 'kampagne'
 
+
+
 def __enter__(self):
         self.file = open(self.filename, self.mode)
         return self.file
@@ -51,6 +53,7 @@ def readconfig():
                 print('Section Telegram not found', flush=True)
 
             if config.has_section('MAIL'):
+                    print('Section Mail found', flush=True)
                     global MAILUSER, MAILDOMAIN, MAILPASSWORD, MAILTO
                     MAILUSER = config['MAIL']['username']
                     MAILDOMAIN = config['MAIL']['maildomain']
@@ -60,6 +63,7 @@ def readconfig():
                 print('Section Mail not found', flush=True)
 
             if config.has_section('Twitter'):
+                    print('Section Twitter found', flush=True)
                     global TWITTERAKEY, TWITTERCKEY, TWITTERASECRET, TWITTERCSECRET
                     TWITTERCKEY = config['Twitter']['consumerkey']
                     TWITTERCSECRET = config['Twitter']['consumersecret']

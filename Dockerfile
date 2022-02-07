@@ -59,5 +59,7 @@ COPY startapp.sh /startapp.sh
 COPY speedtest.py /opt/
 COPY entrypoint.py /opt/
 
+RUN mkdir /export
+
 # Set Application name
 ENV APP_NAME="Breitbandmessung"

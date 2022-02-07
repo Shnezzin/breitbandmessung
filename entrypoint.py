@@ -19,20 +19,16 @@ time.sleep(10)
 print('Lets go', flush=True)
 
 if speedtest.run_on_startup == 'true':
-    print('Run on startup')
+    print('Run on startup', flush=True)
     speedtest()
     if speedtest.run_once == 'true':
-        print('Only run once')
+        print('Only run once', flush=True)
         exit()
 
 if speedtest.run_once == 'true':
-    print('Only run once')
+    print('Only run once', flush=True)
     speedtest()
     exit()
-
-print('Sleep 10 sec', flush=True)
-time.sleep(10)
-print('Lets go', flush=True)
 
 # Round time down to the top of the previous minute
 def roundDownTime(dt=None, dateDelta=timedelta(minutes=1)):
