@@ -60,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          ile: Dockerfile.debian
+          file: Dockerfile
           tags: |
             shneezin/breitbandmessung-node:dev
           platforms: linux/amd64
