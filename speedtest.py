@@ -6,13 +6,12 @@ import tkinter as tk
 import time
 import configparser
 import apprise
+import os, time
 
 #modus = 'setup'
 #modus = 'position'
 #modus = 'einzelmessung'
 #modus = 'kampagne'
-
-
 
 def __enter__(self):
         self.file = open(self.filename, self.mode)
@@ -87,7 +86,8 @@ def click(x,y):
 def sendnotification():
         try: MIN_UPLOAD and MIN_DOWNLOAD
         except:
-            exit()
+            print('Min Up or Download not set', flush=True)
+            internet_to_slow = False
         else:
             if result_up >= MIN_UPLOAD or result_down >= MIN_DOWNLOAD:
                 internet_to_slow = False
@@ -114,11 +114,11 @@ class onetime:
     def downaup():
         global result_down, result_up
         root = tk.Tk()
-        pyautogui.doubleClick(369,170)
+        pyautogui.doubleClick(408,168)
         pyautogui.hotkey('ctrl', 'c')
         result_down = root.clipboard_get()
         print('Download: ' + result_down + ' MBit/s', flush=True)
-        pyautogui.doubleClick(337,340)
+        pyautogui.doubleClick(408,337)
         pyautogui.hotkey('ctrl', 'c')
         result_up = root.clipboard_get()
         print('Upload: ' + result_up + ' MBit/s', flush=True)
@@ -162,7 +162,7 @@ def speedtest():
     try:
         if MEASURMENT_MODE == 'einzelmessung':
             onetime.measurement() 
-            time.sleep(55)
+            time.sleep(90)
             onetime.downaup()
             sendnotification()
         elif MEASURMENT_MODE == 'kampagne':
@@ -175,3 +175,8 @@ def speedtest():
                 sleep(1)
     except:
         print('Keine Messart gefunden', flush=True)
+
+def timezone():
+    print('Setting timezone to:' + timezone_config, flush=True)
+    os.environ['TZ'] = timezone_config
+    time.tzset()

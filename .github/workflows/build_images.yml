@@ -62,7 +62,7 @@ jobs:
           push: true
           file: Dockerfile
           tags: |
-            shneezin/breitbandmessung-node:dev
+            shneezin/breitbandmessung:dev
           platforms: linux/amd64
           build-args: |
             COMMIT_SHA=${{ github.sha }}

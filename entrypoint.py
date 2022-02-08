@@ -1,14 +1,10 @@
 from croniter import croniter
-from datetime import datetime, timedelta, time
-import os, time
 from speedtest import *
 import speedtest
+from datetime import datetime, timedelta
+import time
 
 readconfig()
-
-print('Setting timezone to:' + speedtest.timezone_config)
-os.environ['TZ'] = speedtest.timezone_config
-time.tzset()
 
 if speedtest.MEASURMENT_MODE == 'setup':
     while True:
@@ -20,14 +16,14 @@ print('Lets go', flush=True)
 
 if speedtest.run_on_startup == 'true':
     print('Run on startup', flush=True)
-    speedtest()
+    speedtest.speedtest()
     if speedtest.run_once == 'true':
         print('Only run once', flush=True)
         exit()
 
 if speedtest.run_once == 'true':
     print('Only run once', flush=True)
-    speedtest()
+    speedtest.speedtest()
     exit()
 
 # Round time down to the top of the previous minute
@@ -54,7 +50,7 @@ while True:
      roundedDownTime = roundDownTime()
      if (roundedDownTime == nextRunTime):
 
-         speedtest()
+         speedtest.speedtest()
 
          nextRunTime = getNextCronRunTime(cronschedule)
      elif (roundedDownTime > nextRunTime):
