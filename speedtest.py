@@ -107,12 +107,13 @@ def sendnotification():
             apobj.notify(
             body=my_message,
             title='Breitbandmessung.de Ergebnis',
+            attach=screenshot,
             )
 
 class onetime:
 
     def downaup():
-        global result_down, result_up
+        global result_down, result_up, screenshot
         root = tk.Tk()
         pyautogui.doubleClick(408,168)
         pyautogui.hotkey('ctrl', 'c')
@@ -122,6 +123,8 @@ class onetime:
         pyautogui.hotkey('ctrl', 'c')
         result_up = root.clipboard_get()
         print('Upload: ' + result_up + ' MBit/s', flush=True)
+        click(408,337)
+        screenshot = pyautogui.screenshot()
         click(337,340)
 
     def measurement():
