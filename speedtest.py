@@ -113,10 +113,14 @@ class onetime:
         pyautogui.doubleClick(408,168)
         pyautogui.hotkey('ctrl', 'c')
         result_down = root.clipboard_get()
+        if result_down == '':
+            result_down = '-'
         print('Download: ' + result_down + ' MBit/s', flush=True)
         pyautogui.doubleClick(408,337)
         pyautogui.hotkey('ctrl', 'c')
         result_up = root.clipboard_get()
+        if result_up == '':
+            result_up = '-'
         print('Upload: ' + result_up + ' MBit/s', flush=True)
         click(408,337)
         screenshot = pyautogui.screenshot()
