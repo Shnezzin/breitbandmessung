@@ -10,8 +10,8 @@ if speedtest.MEASURMENT_MODE == 'setup':
     while True:
         sleep(20)
 
-print('Sleep 10 sec', flush=True)
-time.sleep(10)
+print('Sleep 30 sec', flush=True)
+time.sleep(30)
 print('Lets go', flush=True)
 
 if speedtest.run_on_startup == 'true':
