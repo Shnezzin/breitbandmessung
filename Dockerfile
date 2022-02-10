@@ -29,6 +29,7 @@ RUN apt-get update && \
             python3-dev \
             python3-pip \
             python3-tk \
+            scrot \
             wget \
             xterm \
             zlib1g-dev \
