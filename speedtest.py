@@ -79,7 +79,7 @@ def click(x,y):
     pyautogui.leftClick(x,y)
 
 def sendnotification():
-        try: MIN_UPLOAD and MIN_DOWNLOAD
+        try: MIN_UPLOAD and MIN_DOWNLOAD and result_down and result_up
         except:
             print('Min Up or Download not set', flush=True)
             internet_to_slow = False
@@ -127,6 +127,7 @@ class onetime:
         if happy == '1':
             click(260,490)
         elif happy == '2':
+            click(530,490)
             click(415,490)
         elif happy == '3':
             click(530,490)
@@ -171,8 +172,10 @@ def speedtest():
                 mouseposition = pyautogui.position()
                 print(mouseposition, flush=True)
                 sleep(1)
-    except:
-        print('No measurement type found. Possible types are: setup, einzelmessung, kampagne', flush=True)
+        else:
+            print('No measurement type found. Possible types are: setup, einzelmessung, kampagne', flush=True)
+    except Exception as e:
+            print(e, flush=True)
 
 def timezone():
     print('Setting timezone to:' + timezone_config, flush=True)
