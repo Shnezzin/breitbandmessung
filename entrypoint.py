@@ -8,7 +8,7 @@ readconfig()
 
 if speedtest.MEASURMENT_MODE == 'setup':
     while True:
-        sleep(10)
+        sleep(20)
 
 print('Sleep 10 sec', flush=True)
 time.sleep(10)

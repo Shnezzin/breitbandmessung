@@ -6,15 +6,25 @@ ENV LANG=de_DE.UTF-8
 #Install xterm 
 RUN apt-get update && \
     apt-get install -y \
-            libasound2 \                        
+            curl jq \
+            libasound2 \
             libatk-bridge2.0 \
             libatk1.0 \
+            libcurl4 \
             libgbm-dev \
             libgtk-3-0 \
             libjpeg-dev \
+            libjq1 \
+            libnghttp2-14 \
             libnss3 \
+            libonig4 \
+            libpython2.7-minimal \
+            librtmp1 \
             libxss1 \
             locales \
+            nodejs \
+            python-minimal \
+            python2.7-minimal \
             python3 \
             python3-dev \
             python3-pip \
@@ -22,23 +32,14 @@ RUN apt-get update && \
             wget \
             xterm \
             zlib1g-dev \
-            curl jq \
-            libcurl4 \
-            libjq1 \
-            libnghttp2-14 \
-            libonig4 \
-            libpython2.7-minimal \
-            librtmp1 \
-            nodejs \
-            python-minimal \
-            python2.7-minimal
+            && rm -rf /var/lib/apt/lists/*
 
 #Install pyautogui, xlib and apprise
-RUN pip3 install \
-            pyautogui \
-            python-xlib \ 
+RUN pip3 install --no-cache-dir \
             apprise \
-            croniter
+            croniter \
+            pyautogui \
+            python-xlib
 
 #Install latest Version of Breitbandmessung deb
 RUN wget https://download.breitbandmessung.de/bbm/Breitbandmessung-linux.deb && dpkg -i Breitbandmessung-linux.deb

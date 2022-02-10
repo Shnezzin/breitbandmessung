@@ -8,11 +8,6 @@ import configparser
 import apprise
 import os, time
 
-#modus = 'setup'
-#modus = 'position'
-#modus = 'einzelmessung'
-#modus = 'kampagne'
-
 def __enter__(self):
         self.file = open(self.filename, self.mode)
         return self.file
@@ -177,7 +172,7 @@ def speedtest():
                 print(mouseposition, flush=True)
                 sleep(1)
     except:
-        print('Keine Messart gefunden', flush=True)
+        print('No measurement type found. Possible types are: setup, einzelmessung, kampagne', flush=True)
 
 def timezone():
     print('Setting timezone to:' + timezone_config, flush=True)
