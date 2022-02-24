@@ -11,7 +11,7 @@ import psutil
 
 config = configparser.ConfigParser(allow_no_value=True)
 try:
-        config.read('config/config.cfg')
+    with config.read('config/config.cfg'):
 
         if config.has_section('Measurement'):
                 MIN_UPLOAD = config.get('Measurement', 'min-upload')
@@ -34,7 +34,7 @@ try:
                 TWITTERASecret = config.get('Twitter', 'accesssecret')
 
 except IOError:
-    print('No configuration available')
+    print('No configuration available', flush=True)
 
 TEST_URL = "https://breitbandmessung.de/test"
 FIREFOX_PATH = "firefox-esr"
@@ -61,8 +61,7 @@ for proc in psutil.process_iter():
         proc.kill()
 
 #Open browser and testpage breitbandmessung.de/test
-print()
-print("Open Browser")
+print("Open Browser", flush=True)
 fireFoxOptions = webdriver.FirefoxOptions()
 fireFoxOptions.headless = True
 fireFoxOptions.set_preference("browser.download.folderList", 2)
@@ -73,7 +72,7 @@ fireFoxOptions.set_preference("browser.download.panel.shown", False)
 browser = webdriver.Firefox(options=fireFoxOptions)
 
 browser.get("https://breitbandmessung.de/test")
-print("Click all buttons")
+print("Click all buttons", flush=True)
 accept_necessary_cookies = browser.find_element(By.CSS_SELECTOR, allow_necessary)
 try:
     elem = WebDriverWait(browser, 10).until(
@@ -84,7 +83,7 @@ finally:
 accept_necessary_cookies = browser.find_element(By.CSS_SELECTOR, allow_necessary)
 accept_necessary_cookies.click()
 
-print("Wait until the location window disappears")
+print("Wait until the location window disappears", flush=True)
 time.sleep(SLEEPTIME)
 try:
     elem = WebDriverWait(browser, 10).until(
@@ -92,17 +91,17 @@ try:
     )
 finally:
     browser.find_element(By.CSS_SELECTOR, start_test_button)
-print("Clicking the last buttons")
+print("Clicking the last buttons", flush=True)
 start_test_button = browser.find_element(By.CSS_SELECTOR, start_test_button)
 start_test_button.click()
 
 data_guidlines = browser.find_element(By.CSS_SELECTOR, allow)
 data_guidlines.click()
 
-print("Start measurement")
+print("Start measurement", flush=True)
 while True:
     try:
-        header = browser.find_element(By.CSS_SELECTOR, website_header)
+        header = browser.find_element_by_css_selector(website_header)
         if header.text == "Die Browsermessung ist abgeschlossen.":
             save_result = browser.find_element(By.CSS_SELECTOR, download_result)
             save_result.click()
@@ -112,10 +111,10 @@ while True:
             result_up_unit = browser.find_element(By.CSS_SELECTOR, upload_unit)
             result_ping = browser.find_element(By.CSS_SELECTOR, ping)
             result_ping_unit = browser.find_element(By.CSS_SELECTOR, ping_unit)
-            print("")
-            print("Ping: ", result_ping.text, result_ping_unit.text)
-            print("Download: ", result_down.text, result_down_unit.text)
-            print("Upload: ", result_up.text,  result_up_unit.text)
+            print("", flush=True)
+            print("Ping: ", result_ping.text, result_ping_unit.text, flush=True)
+            print("Download: ", result_down.text, result_down_unit.text, flush=True)
+            print("Upload: ", result_up.text,  result_up_unit.text, flush=True)
             now = datetime.now()
             current_time = now.strftime("%H_%M_%S")
             current_date = now.strftime("%d_%m_%Y")
@@ -125,18 +124,14 @@ while True:
     finally:
         time.sleep(SLEEPTIME)
 
-try: MIN_UPLOAD and MIN_DOWNLOAD
-except NameError:
-    exit()
+if result_up.text >= MIN_UPLOAD and result_down.text >= MIN_DOWNLOAD:
+    internet_to_slow = False
+    print('Internet ok', flush=True)
 else:
-    if result_up.text >= MIN_UPLOAD or result_down.text >= MIN_DOWNLOAD:
-        internet_to_slow = False
-        print('Internet ok')
-    else:
-        internet_to_slow = True
+    internet_to_slow = True
 
 if internet_to_slow:
-    print("Internet to slow")
+    print("Internet to slow", flush=True)
     my_message = "Current Download is: " + result_down.text + " " + result_down_unit.text + " and current upload is: " + result_up.text + " " + result_up_unit.text
     apobj = apprise.Apprise()
     config = apprise.AppriseConfig()
