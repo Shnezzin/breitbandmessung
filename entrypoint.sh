@@ -3,10 +3,10 @@ set -e
 
 source config.shlib;
 
-TZ="$(config_get timezone)";
+TZ="$(config_get timezone | tr -cd "'[:alnum:]")";
 CRON_SCHEDULE="$(config_get crontab)";
-RUN_ONCE="$(config_get run_once)";
-RUN_ON_STARTUP="$(config_get run_on_startup)";
+RUN_ONCE="$(config_get run_once | tr -cd "'[:alnum:]")";
+RUN_ON_STARTUP="$(config_get run_on_startup | tr -cd "'[:alnum:]")";
 
 export MOZ_HEADLESS=1
 echo "Setting timezone: $TZ"
