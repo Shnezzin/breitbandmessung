@@ -129,7 +129,7 @@ try: MIN_UPLOAD and MIN_DOWNLOAD
 except NameError:
     exit()
 else:
-    if result_up.text >= MIN_UPLOAD or result_down.text >= MIN_DOWNLOAD:
+    if result_up.text >= MIN_UPLOAD and result_down.text >= MIN_DOWNLOAD:
         internet_to_slow = False
         print('Internet ok', flush=True)
     else:
