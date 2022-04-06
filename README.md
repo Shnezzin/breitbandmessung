@@ -33,6 +33,11 @@ consumerkey=T1JJ3T3L2
 consumersecret=A1BRTD4JD
 accesstoken=TIiajkdnlazkcOXrIdevi7F
 accesssecret=FDVJaj4jcl8chG3
+
+[influxdb]
+host=influxdb
+port=8086
+dbname=breitbandmessung
 ```
 
 Create a folder for the measurement results with `mkdir messprotokolle`.
