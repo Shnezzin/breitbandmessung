@@ -181,7 +181,7 @@ try:
 except NameError:
     exit()
 else:
-    if result_up.text >= MIN_UPLOAD and result_down.text >= MIN_DOWNLOAD:
+    if result_up.text <= MIN_UPLOAD and result_down.text <= MIN_DOWNLOAD:
         internet_to_slow = False
         print("Internet ok", flush=True)
     else:
@@ -199,11 +199,16 @@ if internet_to_slow:
         + " "
         + result_up_unit.text
     )
+
     apobj = apprise.Apprise()
     config = apprise.AppriseConfig()
-    if TELEGRAM_TOKEN and TELEGRAM_TOKEN != '':
+    try:
+        TELEGRAM_TOKEN and TELEGRAM_TOKEN
         apobj.add("tgram://" + TELEGRAM_TOKEN + "/" + TELEGRAM_ID)
-    if MAILUSER or MAILPASSWORD or MAILDOMAIN or MAILTO or MAILUSER != '':
+    except NameError:
+        print('Telegram not set')
+    try:
+        MAILUSER and MAILPASSWORD and MAILDOMAIN and MAILTO and MAILUSER
         apobj.add(
             "mailto://"
             + MAILUSER
@@ -216,8 +221,11 @@ if internet_to_slow:
             + "?from="
             + MAILUSER
             + "&name=Breitbandmessung Docker"
-        )
-    if TWITTERCKey and TWITTERCSecret and TWITTERAKey and TWITTERASecret != '':
+            )
+    except NameError:
+        print('Mail not set')
+    try:
+        TWITTERCKey and TWITTERCSecret and TWITTERAKey and TWITTERASecret
         apobj.add(
             "twitter://"
             + TWITTERCKey
@@ -229,8 +237,10 @@ if internet_to_slow:
             + TWITTERASecret
             + "?mode=tweet"
         )
+    except NameError:
+        print('Twitter not set')    
 
-    apobj.notify(
+        apobj.notify(
         body=my_message,
         title="Breitbandmessung.de Ergebnis",
         attach=filename,
