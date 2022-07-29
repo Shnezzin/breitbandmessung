@@ -201,31 +201,34 @@ if internet_to_slow:
     )
     apobj = apprise.Apprise()
     config = apprise.AppriseConfig()
-    apobj.add("tgram://" + TELEGRAM_TOKEN + "/" + TELEGRAM_ID)
-    apobj.add(
-        "mailto://"
-        + MAILUSER
-        + ":"
-        + MAILPASSWORD
-        + "@"
-        + MAILDOMAIN
-        + "?to="
-        + MAILTO
-        + "?from="
-        + MAILUSER
-        + "&name=Breitbandmessung Docker"
-    )
-    apobj.add(
-        "twitter://"
-        + TWITTERCKey
-        + "/"
-        + TWITTERCSecret
-        + "/"
-        + TWITTERAKey
-        + "/"
-        + TWITTERASecret
-        + "?mode=tweet"
-    )
+    if TELEGRAM_TOKEN and TELEGRAM_TOKEN != '':
+        apobj.add("tgram://" + TELEGRAM_TOKEN + "/" + TELEGRAM_ID)
+    if MAILUSER or MAILPASSWORD or MAILDOMAIN or MAILTO or MAILUSER != '':
+        apobj.add(
+            "mailto://"
+            + MAILUSER
+            + ":"
+            + MAILPASSWORD
+            + "@"
+            + MAILDOMAIN
+            + "?to="
+            + MAILTO
+            + "?from="
+            + MAILUSER
+            + "&name=Breitbandmessung Docker"
+        )
+    if TWITTERCKey and TWITTERCSecret and TWITTERAKey and TWITTERASecret != '':
+        apobj.add(
+            "twitter://"
+            + TWITTERCKey
+            + "/"
+            + TWITTERCSecret
+            + "/"
+            + TWITTERAKey
+            + "/"
+            + TWITTERASecret
+            + "?mode=tweet"
+        )
 
     apobj.notify(
         body=my_message,
