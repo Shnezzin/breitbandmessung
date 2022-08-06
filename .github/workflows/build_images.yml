@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - test
 
 jobs:
   build_multi_arch_image:
