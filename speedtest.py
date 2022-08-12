@@ -173,6 +173,19 @@ while True:
                 db_client.write_points(json_body)
                 db_client.close()
             break
+    except:
+        now = datetime.now()
+        current_time = now.strftime("%H_%M_%S")
+        current_date = now.strftime("%d_%m_%Y")
+        filename = (
+            DOWNLOADED_PATH
+            + SCREENSHOTNAME
+            + current_date
+            + "_error_"
+            + current_time
+            + SCREENSHOTTEXT
+        )
+        browser.save_screenshot(filename)  
     finally:
         time.sleep(SLEEPTIME)
 

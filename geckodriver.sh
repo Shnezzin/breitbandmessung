@@ -10,7 +10,10 @@ if [ $os = "Linux" ] ; then
             url=https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz
             ;;
         xscale | arm | armv61 | armv71 | armv81 | aarch64 | armv7l )
-            url=https://github.com/shneezin/breitbandmessung/raw/main/geckodriver-v0.30.0-linuxarm32.tar.gz
+            url=https://github.com/shneezin/breitbandmessung/raw/main/geckodriver-v0.31.0-linuxarm32.tar.gz
+            ;;
+        aarch64)
+            url=https://github.com/shneezin/breitbandmessung/raw/main/geckodriver-v0.31.0-linux-aarch64.tar.gz
             ;;
         *)
             echo Architecture not supported: $arch
