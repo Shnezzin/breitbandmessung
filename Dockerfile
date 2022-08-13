@@ -3,7 +3,7 @@ FROM python:slim-bullseye
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.62.1
+    RUST_VERSION=1.63.0
 
 WORKDIR /usr/src/app
 

@@ -70,8 +70,11 @@ upload = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > 
 upload_unit = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
 
 for proc in psutil.process_iter():
-    if proc.name() == FIREFOX_PATH:
-        proc.kill()
+    try:
+        if proc.name() == FIREFOX_PATH:
+            proc.kill()
+    finally:
+        pass
 
 # Open browser and testpage breitbandmessung.de/test
 print()
