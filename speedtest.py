@@ -8,7 +8,8 @@ from datetime import timezone
 import configparser
 import apprise
 import time
-import psutil
+import subprocess, signal
+import os
 import influxdb as db
 
 config = configparser.ConfigParser(allow_no_value=True)
@@ -55,6 +56,7 @@ DOWNLOADED_PATH = "/export/"
 SLEEPTIME = 10
 SCREENSHOTNAME = "Breitbandmessung_"
 SCREENSHOTTEXT = ".png"
+GECKODRIVER_PATH = "geckodriver"
 
 # Buttons to click
 allow_necessary = "#allow-necessary"
@@ -69,12 +71,16 @@ download_unit = "div.col-md-6:nth-child(2) > div:nth-child(1) > div:nth-child(1)
 upload = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)"
 upload_unit = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
 
-for proc in psutil.process_iter():
-    try:
-        if proc.name() == FIREFOX_PATH:
-            proc.kill()
-    finally:
-        pass
+def closebrowser():
+    # Get all running processes
+    p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+    out, err = p.communicate()
+
+    # Check from each process and terminate if it is an old Speedtest run
+    for line in out.splitlines():
+        if FIREFOX_PATH.encode() in line:
+            pid = int(line.split(None, 1)[0])
+            os.kill(pid, signal.SIGKILL)
 
 # Open browser and testpage breitbandmessung.de/test
 print()
@@ -84,11 +90,12 @@ fireFoxOptions.headless = True
 fireFoxOptions.set_preference("browser.download.folderList", 2)
 fireFoxOptions.set_preference("browser.download.manager.showWhenStarting", False)
 fireFoxOptions.set_preference("browser.download.dir", DOWNLOADED_PATH)
+fireFoxOptions.binary_location = FIREFOX_PATH
 fireFoxOptions.set_preference(
     "browser.helperApps.neverAsk.saveToDisk", "application/force-download"
 )
 fireFoxOptions.set_preference("browser.download.panel.shown", False)
-browser = webdriver.Firefox(options=fireFoxOptions)
+browser = webdriver.Firefox(executable_path= GECKODRIVER_PATH, options=fireFoxOptions)
 
 browser.get(TEST_URL)
 print("Click all buttons", flush=True)
@@ -195,6 +202,7 @@ while True:
 try:
     MIN_UPLOAD and MIN_DOWNLOAD
 except NameError:
+    closebrowser()
     exit()
 else:
     if result_up.text <= MIN_UPLOAD and result_down.text <= MIN_DOWNLOAD:
@@ -263,4 +271,5 @@ if internet_to_slow:
     )
 
 browser.close()
+closebrowser()
 exit()
