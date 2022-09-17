@@ -10,6 +10,9 @@ import apprise
 import time
 import subprocess, signal
 import os
+from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
 import influxdb as db
 
 config = configparser.ConfigParser(allow_no_value=True)
@@ -18,20 +21,24 @@ try:
     config.read("/usr/src/app/config/config.cfg")
 
     if config.has_section("Measurement"):
+        print("Measurement config found")
         MIN_UPLOAD = config.get("Measurement", "min-upload")
         MIN_DOWNLOAD = config.get("Measurement", "min-download")
 
     if config.has_section("Telegram"):
+        print("Telegram config found")
         TELEGRAM_TOKEN = config.get("Telegram", "token")
         TELEGRAM_ID = config.get("Telegram", "ID")
 
     if config.has_section("MAIL"):
+        print("Mail config found")
         MAILUSER = config.get("MAIL", "username")
         MAILDOMAIN = config.get("MAIL", "maildomain")
         MAILPASSWORD = config.get("MAIL", "password")
         MAILTO = config.get("MAIL", "mailto")
 
     if config.has_section("Twitter"):
+        print("Twitter config found")
         TWITTERCKey = config.get("Twitter", "consumerkey")
         TWITTERCSecret = config.get("Twitter", "consumersecret")
         TWITTERAKey = config.get("Twitter", "accesstoken")
@@ -46,6 +53,20 @@ try:
             db_client.create_database(INFLUXDB_DBNAME)
         db_client.switch_database(INFLUXDB_DBNAME)
 
+    if config.has_section("influxdbv2"):
+        print("InfluxDB v2 config found")
+        INFLUXDB_HOST = config.get("influxdb", "host")
+        INFLUXDB_PORT = config.get("influxdb", "port")
+        INFLUXDB_DBNAME = config.get("influxdb", "dbname")
+        INFLUXDB_ORG = config.get("influxdb", "orgname")
+        INFLUXDB_TOKEN = config.get("influxdb", "token")
+        INFLUXDB_URL = 'http://' + INFLUXDB_HOST + ':' + INFLUXDB_PORT
+        with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
+            buckets_api = client.buckets_api()
+            if buckets_api.find_bucket_by_name(INFLUXDB_DBNAME) == None:
+                buckets_api.create_bucket(bucket_name=INFLUXDB_DBNAME,
+                                            org=INFLUXDB_ORG)
+                                            
 except IOError:
     print("No configuration available", flush=True)
 
@@ -153,7 +174,7 @@ while True:
                 + SCREENSHOTTEXT
             )
             browser.save_screenshot(filename)
-            if db_client:
+            if buckets_api or db_client:
                 json_body = [
                     {
                         "measurement": "download",
@@ -180,8 +201,14 @@ while True:
                         },
                     },
                 ]
-                db_client.write_points(json_body)
-                db_client.close()
+                if db_client:
+                    db_client.write_points(json_body)
+                    db_client.close()
+                
+                if buckets_api:
+                    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
+                        write_api = client.write_api(write_options=SYNCHRONOUS)
+                        datasave = write_api.write(INFLUXDB_DBNAME, INFLUXDB_ORG, json_body)
             break
     except:
         now = datetime.now()
