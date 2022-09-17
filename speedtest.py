@@ -17,6 +17,7 @@ import influxdb as db
 
 config = configparser.ConfigParser(allow_no_value=True)
 db_client = None
+buckets_api = None
 try:
     config.read("/usr/src/app/config/config.cfg")
 
