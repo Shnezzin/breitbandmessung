@@ -67,6 +67,7 @@ RUN --mount=type=tmpfs,target=/usr/local/cargo pip3 install --no-cache-dir \
     selenium \
     apprise \
     psutil \
+    influxdb_client \
     influxdb;
 
 ENTRYPOINT ["tini", "--", "docker-entrypoint.sh"]
