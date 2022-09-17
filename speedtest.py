@@ -55,11 +55,11 @@ try:
 
     if config.has_section("influxdbv2"):
         print("InfluxDB v2 config found")
-        INFLUXDB_HOST = config.get("influxdb", "host")
-        INFLUXDB_PORT = config.get("influxdb", "port")
-        INFLUXDB_DBNAME = config.get("influxdb", "dbname")
-        INFLUXDB_ORG = config.get("influxdb", "orgname")
-        INFLUXDB_TOKEN = config.get("influxdb", "token")
+        INFLUXDB_HOST = config.get("influxdbv2", "host")
+        INFLUXDB_PORT = config.get("influxdbv2", "port")
+        INFLUXDB_DBNAME = config.get("influxdbv2", "dbname")
+        INFLUXDB_ORG = config.get("influxdbv2", "orgname")
+        INFLUXDB_TOKEN = config.get("influxdbv2", "token")
         INFLUXDB_URL = 'http://' + INFLUXDB_HOST + ':' + INFLUXDB_PORT
         with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
             buckets_api = client.buckets_api()
