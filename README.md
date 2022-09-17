@@ -38,6 +38,14 @@ accesssecret=FDVJaj4jcl8chG3
 host=influxdb
 port=8086
 dbname=breitbandmessung
+
+[influxdbv2]
+host=influxdb
+port=8086
+dbname=breitbandmessung
+orgname=MyOrganizationName
+token=SOYW1RRCbL6j0m5I6_UE6SMG3LHOirIhov2Y7NkPUcVHbaWIJZfdJT0h7geEaY5z42bz9SyuSjQ7GtTIsD43ev==
+
 ```
 
 Create a folder for the measurement results with `mkdir messprotokolle`.
