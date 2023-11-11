@@ -298,6 +298,6 @@ if internet_to_slow:
         attach=filename,
     )
 
-browser.close()
+browser.quit()
 closebrowser()
 exit()
