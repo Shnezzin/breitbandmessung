@@ -8,11 +8,27 @@ echo "Architecture: $arch"
 # Function to get latest geckodriver version from GitHub API
 get_latest_version() {
     echo "Fetching latest geckodriver version..." >&2
-    latest_version=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    json_response=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest)
+    latest_version=""
+    
+    # Method 1: Using grep and cut
+    latest_version=$(echo "$json_response" | grep '"tag_name":' | head -n1 | cut -d'"' -f4)
+    
+    # Method 2: Using sed (fallback)
     if [ -z "$latest_version" ]; then
-        echo "Warning: Could not fetch latest version, using fallback v0.36.0" >&2
+        latest_version=$(echo "$json_response" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1)
+    fi
+    
+    # Method 3: Using awk (another fallback)
+    if [ -z "$latest_version" ]; then
+        latest_version=$(echo "$json_response" | awk -F'"' '/"tag_name":/ {print $4; exit}')
+    fi
+    
+    if [ -z "$latest_version" ] || ! echo "$latest_version" | grep -q '^v[0-9]'; then
+        echo "Warning: Could not fetch valid version, using fallback v0.36.0" >&2
         latest_version="v0.36.0"
     fi
+    
     echo "Latest version found: $latest_version" >&2
     echo "$latest_version"
 }
