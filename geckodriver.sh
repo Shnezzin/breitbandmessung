@@ -33,23 +33,19 @@ get_latest_version() {
     echo "$latest_version"
 }
 
-# Try to use local files first
-local_file=""
+# Determine platform based on OS and architecture
 if [ "$os" = "Linux" ] ; then
     case "$arch" in
         i386 | i486 | i786 | x86)
-            local_file="geckodriver-v0.30.0-linuxarm32.tar.gz"
             platform="linux32"
             ;;        
         x86_64 | x86-64 | x64 | amd64)
             platform="linux64"
             ;;
         aarch64)
-            local_file="geckodriver-v0.31.0-linux-aarch64 .tar.gz"
             platform="linux-aarch64"
             ;;
         xscale | arm | armv61 | armv71 | armv81 | armv7l )
-            local_file="geckodriver-v0.31.0-linuxarm32.tar.gz"
             platform="linux32"
             ;;
         *)
@@ -68,44 +64,31 @@ fi
 
 echo "Platform: $platform"
 
-# Try local file first
-if [ -n "$local_file" ] && [ -f "/usr/src/app/$local_file" ]; then
-    echo "Using local geckodriver file: $local_file"
-    if tar -xzf "/usr/src/app/$local_file"; then
-        echo "Local file extracted successfully"
-    else
-        echo "Failed to extract local file, trying download..." >&2
-        local_file=""
-    fi
-fi
+# Get latest version and construct download URL
+latest_version=$(get_latest_version)
 
-# If no local file or local file failed, download
-if [ -z "$local_file" ] || [ ! -f "geckodriver" ]; then
-    # Get latest version and construct download URL
-    latest_version=$(get_latest_version)
-    
-    # Clean up any potential whitespace or newlines
-    latest_version=$(echo "$latest_version" | tr -d '\n\r ')
-    
-    url="https://github.com/mozilla/geckodriver/releases/download/${latest_version}/geckodriver-${latest_version}-${platform}.tar.gz"
-    
-    echo "Download URL: $url"
-    
-    echo "Downloading geckodriver..."
-    if curl -s -L -f -o geckodriver.tar.gz "$url"; then
-        echo "Download successful, extracting..."
-        if tar -xzf geckodriver.tar.gz; then
-            echo "Extraction successful"
-            rm geckodriver.tar.gz
-        else
-            echo "Error: Failed to extract downloaded file" >&2
-            rm -f geckodriver.tar.gz
-            exit 1
-        fi
+# Clean up any potential whitespace or newlines
+latest_version=$(echo "$latest_version" | tr -d '\n\r ')
+
+url="https://github.com/mozilla/geckodriver/releases/download/${latest_version}/geckodriver-${latest_version}-${platform}.tar.gz"
+
+echo "Download URL: $url"
+
+# Download and extract geckodriver
+echo "Downloading geckodriver..."
+if curl -s -L -f -o geckodriver.tar.gz "$url"; then
+    echo "Download successful, extracting..."
+    if tar -xzf geckodriver.tar.gz; then
+        echo "Extraction successful"
+        rm geckodriver.tar.gz
     else
-        echo "Error: Failed to download geckodriver from $url" >&2
+        echo "Error: Failed to extract downloaded file" >&2
+        rm -f geckodriver.tar.gz
         exit 1
     fi
+else
+    echo "Error: Failed to download geckodriver from $url" >&2
+    exit 1
 fi
 
 # Verify geckodriver binary exists
