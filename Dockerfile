@@ -8,6 +8,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 WORKDIR /usr/src/app
 
 COPY speedtest.py config.shlib geckodriver.sh config.cfg.defaults ./
+COPY geckodriver-*.tar.gz ./
 
 COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
