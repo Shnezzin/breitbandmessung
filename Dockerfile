@@ -11,23 +11,31 @@ COPY speedtest.py config.shlib geckodriver.sh config.cfg.defaults ./
 
 COPY entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
+# Install basic dependencies first
 RUN set -eux; \
     apt-get update; \
-    apt-get install --no-install-recommends -y firefox-esr \
-    tini \
-    cron \
-    gcc \
-    ca-certificates \
-    wget \
-    build-essential \
-    libssl-dev \
-    libffi-dev \
-    python3-dev \
-    cargo \
-    curl \
+    apt-get install --no-install-recommends -y \
+        firefox-esr \
+        tini \
+        cron \
+        gcc \
+        ca-certificates \
+        wget \
+        curl \
+        build-essential \
+        libssl-dev \
+        libffi-dev \
+        python3-dev \
+        pkg-config \
     ; \
-    chmod +x /usr/src/app/geckodriver.sh;\
-    /bin/bash /usr/src/app/geckodriver.sh; \
+    rm -rf /var/lib/apt/lists/*
+
+# Install geckodriver
+RUN chmod +x /usr/src/app/geckodriver.sh && \
+    /bin/bash /usr/src/app/geckodriver.sh
+
+# Install Rust
+RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
         amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338' ;; \
@@ -42,24 +50,31 @@ RUN set -eux; \
     chmod +x rustup-init; \
     ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION --default-host ${rustArch}; \
     rm rustup-init; \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
-    rustup update; \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+# Update Rust and verify installation
+RUN set -eux; \
     rustup --version; \
     cargo --version; \
-    rustc --version; \
+    rustc --version
+
+# Install updated libc6-dev if needed
+RUN set -eux; \
     printf "deb http://ftp.debian.org/debian experimental main\ndeb http://ftp.debian.org/debian sid main" > /etc/apt/sources.list.d/experimental.list; \
-    apt-get update ;\
-    apt-get install --no-install-recommends -t experimental -y libc6-dev; \
-    apt-get remove -y --auto-remove \
-        wget \
-        curl \
-        ; \
+    apt-get update; \
+    apt-get install --no-install-recommends -t experimental -y libc6-dev || true; \
+    rm -rf /var/lib/apt/lists/*
+
+# Clean up and prepare Python environment
+RUN set -eux; \
+    apt-get update; \
+    apt-get remove -y --auto-remove wget curl || true; \
     rm -rf /var/lib/apt/lists/*; \
     pip3 install --upgrade pip; \
     pip3 install --no-cache-dir --upgrade setuptools; \
     chmod +x /usr/src/app/speedtest.py; \
-    mkdir /export; \
-    chmod +x /usr/local/bin/docker-entrypoint.sh;
+    mkdir -p /export; \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
 RUN --mount=type=tmpfs,target=/usr/local/cargo pip3 install --no-cache-dir \
     cryptography; \
