@@ -28,7 +28,12 @@ echo "Run once: ${RUN_ONCE}"
 if [ "$RUN_ONCE" = "false" ]; then
 printenv | sed 's/^\(.*\)$/export \1/g' > /root/project_env.sh
 echo "Setting cron schedule: ${CRON_SCHEDULE}"
-echo "${CRON_SCHEDULE} '/usr/src/app/speedtest.py' > /proc/self/fd/1 2>/proc/self/fd/2" | crontab -
+# Fix cron schedule format - remove escaped asterisks and ensure proper format
+FIXED_CRON_SCHEDULE=$(echo "${CRON_SCHEDULE}" | sed 's/\\//g')
+echo "Fixed cron schedule: ${FIXED_CRON_SCHEDULE}"
+echo "${FIXED_CRON_SCHEDULE} . /root/project_env.sh && '/usr/src/app/speedtest.py' > /proc/self/fd/1 2>/proc/self/fd/2" | crontab -
+echo "Current crontab:"
+crontab -l
 cron -f
 else
 "/usr/src/app/speedtest.py"  > /proc/self/fd/1 2>/proc/self/fd/2

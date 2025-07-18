@@ -46,6 +46,11 @@ dbname=breitbandmessung
 orgname=MyOrganizationName
 token=SOYW1RRCbL6j0m5I6_UE6SMG3LHOirIhov2Y7NkPUcVHbaWIJZfdJT0h7geEaY5z42bz9SyuSjQ7GtTIsD43ev==
 
+[prometheus]
+gateway=http://prometheus-pushgateway:9091
+job=breitbandmessung
+instance=home
+
 ```
 
 Create a folder for the measurement results with `mkdir messprotokolle`.
@@ -78,6 +83,32 @@ To merge the csv files into one, run merge.sh or:
 ```
 wget -O - https://raw.githubusercontent.com/shneezin/breitbandmessung/master/merge.sh | bash
 ```
+
+## New Features
+
+### Prometheus Support
+The script now supports pushing metrics to Prometheus via a Pushgateway. Configure the `[prometheus]` section in your config.cfg:
+- `gateway`: URL of your Prometheus Pushgateway
+- `job`: Job name for the metrics (default: breitbandmessung)
+- `instance`: Instance identifier (default: default)
+
+### Automatic Firefox Profile Cleanup
+The script now automatically cleans up Firefox profiles in `/tmp` after each run to prevent disk space issues that could accumulate over time.
+
+### Export Directory Creation
+The script automatically creates the `/export` directory if it doesn't exist, ensuring measurement results are properly saved.
+
+### Fixed Cron Scheduling
+Fixed issues with cron scheduling where escaped asterisks in the cron expression caused measurements to run every minute instead of the configured schedule.
+
+## Configuration Examples
+
+### Cron Schedule Examples
+- `0 */2 * * *` - Every 2 hours at minute 0
+- `47 3 * * *` - Every day at 3:47 AM
+- `0 9,17 * * 1-5` - At 9:00 AM and 5:00 PM on weekdays
+
+**Note**: Do not escape asterisks with backslashes in the cron configuration.
 
 Thanks to shiaky for the idea on this project. 
 You can find his repo [here](https://github.com/shiaky/breitbandmessung)

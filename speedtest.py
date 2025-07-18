@@ -10,10 +10,15 @@ import apprise
 import time
 import subprocess, signal
 import os
-from influxdb import InfluxDBClient
-from influxdb_client import InfluxDBClient
+from influxdb import InfluxDBClient as InfluxDBClientV1
+from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import SYNCHRONOUS
-import influxdb as db
+try:
+    from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    print("Prometheus client not available. Install with: pip install prometheus_client")
 
 config = configparser.ConfigParser(allow_no_value=True)
 db_client = None
@@ -49,7 +54,7 @@ try:
         INFLUXDB_HOST = config.get("influxdb", "host")
         INFLUXDB_PORT = config.get("influxdb", "port")
         INFLUXDB_DBNAME = config.get("influxdb", "dbname")
-        db_client = db.InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT)
+        db_client = InfluxDBClientV1(host=INFLUXDB_HOST, port=INFLUXDB_PORT)
         if not INFLUXDB_DBNAME in db_client.get_list_database():
             db_client.create_database(INFLUXDB_DBNAME)
         db_client.switch_database(INFLUXDB_DBNAME)
@@ -62,11 +67,17 @@ try:
         INFLUXDB_ORG = config.get("influxdbv2", "orgname")
         INFLUXDB_TOKEN = config.get("influxdbv2", "token")
         INFLUXDB_URL = 'http://' + INFLUXDB_HOST + ':' + INFLUXDB_PORT
-        with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
+        with InfluxDBClientV2(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
             buckets_api = client.buckets_api()
             if buckets_api.find_bucket_by_name(INFLUXDB_DBNAME) == None:
                 buckets_api.create_bucket(bucket_name=INFLUXDB_DBNAME,
                                             org=INFLUXDB_ORG)
+
+    if config.has_section("prometheus") and PROMETHEUS_AVAILABLE:
+        print("Prometheus config found")
+        PROMETHEUS_GATEWAY = config.get("prometheus", "gateway")
+        PROMETHEUS_JOB = config.get("prometheus", "job", fallback="breitbandmessung")
+        PROMETHEUS_INSTANCE = config.get("prometheus", "instance", fallback="default")
                                             
 except IOError:
     print("No configuration available", flush=True)
@@ -79,6 +90,17 @@ SLEEPTIME = 10
 SCREENSHOTNAME = "Breitbandmessung_"
 SCREENSHOTTEXT = ".png"
 GECKODRIVER_PATH = "geckodriver"
+
+# Ensure export directory exists
+if not os.path.exists(DOWNLOADED_PATH):
+    try:
+        os.makedirs(DOWNLOADED_PATH, exist_ok=True)
+        print(f"Created export directory: {DOWNLOADED_PATH}", flush=True)
+    except Exception as e:
+        print(f"Failed to create export directory {DOWNLOADED_PATH}: {e}", flush=True)
+        exit(1)
+else:
+    print(f"Export directory exists: {DOWNLOADED_PATH}", flush=True)
 
 # Buttons to click
 allow_necessary = "#allow-necessary"
@@ -93,6 +115,28 @@ download_unit = "div.col-md-6:nth-child(2) > div:nth-child(1) > div:nth-child(1)
 upload = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)"
 upload_unit = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
 
+def cleanup_firefox_profiles():
+    """Clean up old Firefox profiles in /tmp to prevent disk space issues"""
+    try:
+        import glob
+        import shutil
+        
+        # Find all rust_mozprofile* directories in /tmp
+        profile_dirs = glob.glob('/tmp/rust_mozprofile*')
+        
+        if profile_dirs:
+            print(f"Found {len(profile_dirs)} Firefox profile directories to clean up", flush=True)
+            for profile_dir in profile_dirs:
+                try:
+                    shutil.rmtree(profile_dir)
+                    print(f"Removed Firefox profile: {profile_dir}", flush=True)
+                except Exception as e:
+                    print(f"Failed to remove Firefox profile {profile_dir}: {e}", flush=True)
+        else:
+            print("No Firefox profiles found to clean up", flush=True)
+    except Exception as e:
+        print(f"Error during Firefox profile cleanup: {e}", flush=True)
+
 def closebrowser():
     # Get all running processes
     p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
@@ -103,6 +147,9 @@ def closebrowser():
         if FIREFOX_PATH.encode() in line:
             pid = int(line.split(None, 1)[0])
             os.kill(pid, signal.SIGKILL)
+    
+    # Clean up Firefox profiles after closing browser
+    cleanup_firefox_profiles()
 
 # Open browser and testpage breitbandmessung.de/test
 print()
@@ -207,9 +254,33 @@ while True:
                     db_client.close()
                 
                 if buckets_api:
-                    with InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
+                    with InfluxDBClientV2(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG) as client:
                         write_api = client.write_api(write_options=SYNCHRONOUS)
                         datasave = write_api.write(INFLUXDB_DBNAME, INFLUXDB_ORG, json_body)
+            
+            # Push metrics to Prometheus if configured
+            try:
+                if 'PROMETHEUS_GATEWAY' in locals() and PROMETHEUS_AVAILABLE:
+                    print("Pushing metrics to Prometheus", flush=True)
+                    registry = CollectorRegistry()
+                    
+                    # Create gauges for metrics
+                    download_gauge = Gauge('breitbandmessung_download_mbps', 'Download speed in Mbps', registry=registry)
+                    upload_gauge = Gauge('breitbandmessung_upload_mbps', 'Upload speed in Mbps', registry=registry)
+                    ping_gauge = Gauge('breitbandmessung_ping_ms', 'Ping in milliseconds', registry=registry)
+                    
+                    # Set values
+                    download_gauge.set(float(result_down.text.replace(",", ".")))
+                    upload_gauge.set(float(result_up.text.replace(",", ".")))
+                    ping_gauge.set(int(result_ping.text))
+                    
+                    # Push to gateway
+                    push_to_gateway(PROMETHEUS_GATEWAY, job=PROMETHEUS_JOB, registry=registry, 
+                                  grouping_key={'instance': PROMETHEUS_INSTANCE})
+                    print("Metrics pushed to Prometheus successfully", flush=True)
+            except Exception as e:
+                print(f"Failed to push metrics to Prometheus: {e}", flush=True)
+            
             break
     except:
         now = datetime.now()
@@ -233,11 +304,18 @@ except NameError:
     closebrowser()
     exit()
 else:
-    if result_up.text <= MIN_UPLOAD and result_down.text <= MIN_DOWNLOAD:
+    # Convert strings to float for proper numerical comparison
+    upload_speed = float(result_up.text.replace(",", "."))
+    download_speed = float(result_down.text.replace(",", "."))
+    min_upload = float(MIN_UPLOAD)
+    min_download = float(MIN_DOWNLOAD)
+    
+    if upload_speed < min_upload or download_speed < min_download:
+        internet_to_slow = True
+        print("Internet too slow", flush=True)
+    else:
         internet_to_slow = False
         print("Internet ok", flush=True)
-    else:
-        internet_to_slow = True
 
 if internet_to_slow:
     print("Internet to slow", flush=True)
@@ -290,9 +368,9 @@ if internet_to_slow:
             + "?mode=tweet"
         )
     except NameError:
-        print('Twitter not set')    
+        print('Twitter not set')
 
-        apobj.notify(
+    apobj.notify(
         body=my_message,
         title="Breitbandmessung.de Ergebnis",
         attach=filename,

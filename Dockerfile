@@ -68,6 +68,7 @@ RUN --mount=type=tmpfs,target=/usr/local/cargo pip3 install --no-cache-dir \
     apprise \
     psutil \
     influxdb_client \
-    influxdb;
+    influxdb \
+    prometheus_client;
 
 ENTRYPOINT ["tini", "--", "docker-entrypoint.sh"]
