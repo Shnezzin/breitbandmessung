@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 from selenium import webdriver
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -10,6 +11,8 @@ import apprise
 import time
 import subprocess, signal
 import os
+import csv
+import glob
 from influxdb import InfluxDBClient as InfluxDBClientV1
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -89,7 +92,8 @@ DOWNLOADED_PATH = "/export/"
 SLEEPTIME = 10
 SCREENSHOTNAME = "Breitbandmessung_"
 SCREENSHOTTEXT = ".png"
-GECKODRIVER_PATH = "geckodriver"
+GECKODRIVER_PATH = "/usr/bin/geckodriver"
+
 
 # Ensure export directory exists
 if not os.path.exists(DOWNLOADED_PATH):
@@ -108,12 +112,6 @@ start_test_button = "button.btn:nth-child(4)"
 allow = "button.btn:nth-child(2)"
 website_header = "#root > div > div > div > div > div:nth-child(1) > h1"
 download_result = "button.px-0:nth-child(1)"
-ping = "div.col-md-6:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)"
-ping_unit = "div.col-md-6:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
-download = "div.col-md-6:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)"
-download_unit = "div.col-md-6:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
-upload = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)"
-upload_unit = ".col-md-12 > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3) > span:nth-child(1)"
 
 def cleanup_firefox_profiles():
     """Clean up old Firefox profiles in /tmp to prevent disk space issues"""
@@ -164,7 +162,9 @@ fireFoxOptions.set_preference(
     "browser.helperApps.neverAsk.saveToDisk", "application/force-download"
 )
 fireFoxOptions.set_preference("browser.download.panel.shown", False)
-browser = webdriver.Firefox(executable_path= GECKODRIVER_PATH, options=fireFoxOptions)
+# Create Firefox service with geckodriver path
+firefox_service = Service(executable_path=GECKODRIVER_PATH)
+browser = webdriver.Firefox(service=firefox_service, options=fireFoxOptions)
 
 browser.get(TEST_URL)
 print("Click all buttons", flush=True)
@@ -200,12 +200,45 @@ while True:
         if "abgeschlossen" in header.text:
             save_result = browser.find_element(By.CSS_SELECTOR, download_result)
             save_result.click()
-            result_down = browser.find_element(By.CSS_SELECTOR, download)
-            result_down_unit = browser.find_element(By.CSS_SELECTOR, download_unit)
-            result_up = browser.find_element(By.CSS_SELECTOR, upload)
-            result_up_unit = browser.find_element(By.CSS_SELECTOR, upload_unit)
-            result_ping = browser.find_element(By.CSS_SELECTOR, ping)
-            result_ping_unit = browser.find_element(By.CSS_SELECTOR, ping_unit)
+            
+            # Wait for CSV download to complete and then read the data
+            time.sleep(3)  # Wait for download to complete
+            
+            # Find the most recent CSV file in the download directory
+            csv_files = glob.glob(os.path.join(DOWNLOADED_PATH, "*.csv"))
+            if not csv_files:
+                raise FileNotFoundError("No CSV file found in download directory")
+            
+            # Get the most recent CSV file
+            latest_csv = max(csv_files, key=os.path.getctime)
+            csv_filename = os.path.basename(latest_csv)
+            #print(f"Reading CSV file: {csv_filename}", flush=True)
+            
+            # Read the CSV file and extract measurement data
+            with open(latest_csv, 'r', encoding='utf-8') as file:
+                # Use semicolon as delimiter based on the provided format
+                csv_reader = csv.DictReader(file, delimiter=';')
+                
+                # Read the first (and likely only) data row
+                data_row = next(csv_reader)
+                
+                # Extract the values from the CSV
+                download_value = data_row['Download (Mbit/s)'].replace(',', '.')  # Convert German decimal format
+                upload_value = data_row['Upload (Mbit/s)'].replace(',', '.')
+                ping_value = data_row['Laufzeit (ms)']
+                
+                # Create mock objects that mimic the selenium element behavior
+                class MockElement:
+                    def __init__(self, text):
+                        self.text = text
+                
+                result_down = MockElement(download_value)
+                result_down_unit = MockElement('Mbit/s')
+                result_up = MockElement(upload_value)
+                result_up_unit = MockElement('Mbit/s')
+                result_ping = MockElement(ping_value)
+                result_ping_unit = MockElement('ms')
+            
             print("", flush=True)
             print("Ping: ", result_ping.text, result_ping_unit.text, flush=True)
             print("Download: ", result_down.text, result_down_unit.text, flush=True)
