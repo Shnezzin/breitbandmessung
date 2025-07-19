@@ -1,11 +1,77 @@
+#!/bin/bash
+
 config_read_file() {
-    (grep -E "^${2}=" -m 1 "${1}" 2>/dev/null || echo "VAR=__UNDEFINED__") | head -n 1 | cut -d '=' -f 2-;
+    local file="$1"
+    local key="$2"
+    local section="${3:-General}"
+    
+    if [ ! -f "$file" ]; then
+        echo "__UNDEFINED__"
+        return
+    fi
+    
+    # Simple approach: look for the section, then find the key
+    local in_section=0
+    local result=""
+    
+    while IFS= read -r line; do
+        # Remove leading/trailing whitespace
+        line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        
+        # Skip empty lines and comments
+        if [ -z "$line" ] || [[ "$line" =~ ^# ]]; then
+            continue
+        fi
+        
+        # Check for section header
+        if [[ "$line" =~ ^\[.*\]$ ]]; then
+            if [ "$line" = "[$section]" ]; then
+                in_section=1
+            else
+                in_section=0
+            fi
+            continue
+        fi
+        
+        # If we're in the right section and line contains =
+        if [ "$in_section" = "1" ] && [[ "$line" =~ = ]]; then
+            local line_key=$(echo "$line" | cut -d'=' -f1)
+            if [ "$line_key" = "$key" ]; then
+                result=$(echo "$line" | cut -d'=' -f2-)
+                echo "$result"
+                return
+            fi
+        fi
+    done < "$file"
+    
+    echo "__UNDEFINED__"
 }
 
 config_get() {
-    val="$(config_read_file config/config.cfg "${1}")";
-    if [ "${val}" = "__UNDEFINED__" ]; then
-        val="$(config_read_file config.cfg.defaults "${1}")";
+    local key="$1"
+    local section="${2:-General}"
+    local val=""
+    
+    # Try to read from user config first
+    if [ -f "/usr/src/app/config/config.cfg" ]; then
+        val="$(config_read_file "/usr/src/app/config/config.cfg" "$key" "$section")"
     fi
-    printf -- "%s" "${val}";
+    
+    # If not found, try defaults
+    if [ "$val" = "__UNDEFINED__" ] && [ -f "/usr/src/app/config.cfg.defaults" ]; then
+        val="$(config_read_file "/usr/src/app/config.cfg.defaults" "$key" "$section")"
+    fi
+    
+    # If still not found, use hardcoded defaults
+    if [ "$val" = "__UNDEFINED__" ]; then
+        case "$key" in
+            "timezone") val="UTC" ;;
+            "crontab") val="0 */2 * * *" ;;
+            "run_once") val="true" ;;
+            "run_on_startup") val="true" ;;
+            *) val="" ;;
+        esac
+    fi
+    
+    printf "%s" "$val"
 }

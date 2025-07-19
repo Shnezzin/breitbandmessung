@@ -1,4 +1,45 @@
+[General]
 timezone=UTC
 crontab=0 */2 * * *
 run_once=true
 run_on_startup=true
+
+# Example sections for optional features
+# Uncomment and configure as needed
+
+#[Measurement]
+#min-upload=10
+#min-download=50
+
+#[Telegram]
+#token=YOUR_BOT_TOKEN
+#ID=YOUR_CHAT_ID
+
+#[MAIL]
+#username=your_email@example.com
+#maildomain=smtp.example.com
+#password=your_password
+#mailto=recipient@example.com
+
+#[Twitter]
+#consumerkey=YOUR_CONSUMER_KEY
+#consumersecret=YOUR_CONSUMER_SECRET
+#accesstoken=YOUR_ACCESS_TOKEN
+#accesssecret=YOUR_ACCESS_SECRET
+
+#[influxdb]
+#host=localhost
+#port=8086
+#dbname=breitbandmessung
+
+#[influxdbv2]
+#host=localhost
+#port=8086
+#dbname=breitbandmessung
+#orgname=your_org
+#token=your_token
+
+#[prometheus]
+#gateway=localhost:9091
+#job=breitbandmessung
+#instance=default
